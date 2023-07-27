@@ -12,5 +12,7 @@ pub fn main() !void {
     // IDEA:
     // IDEA: I could try to implement in C first and port it over?
     // IDEA:
-    // IDEA:
+    // TODO: Learn about build.zig and linking libraries
+    // TODO: Learn about creating custom types for the Ships, Planets, Stars, and the Galaxy
+    //
 }
