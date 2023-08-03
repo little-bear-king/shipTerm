@@ -1,6 +1,27 @@
 const std = @import("std");
+const Ship = struct {
+    hp: u32,
+    shields: u32,
 
+    pub fn take_damage(self: Ship, damage: u32) u32 {
+        return self.hp - damage;
+    }
+
+    pub fn init(hp: u32, shields: u32) Ship {
+        return Ship{
+            .hp = hp,
+            .shields = shields,
+        };
+    }
+};
 pub fn main() !void {
+    const Capitol = Ship.init(100, 100);
+
+    const hp = Capitol.hp;
+
+    const current_hp: u32 = Capitol.take_damage(50);
+
+    std.debug.print("Original HP: {}\nNew Hp: {}", .{ hp, current_hp });
     // A terminal application that tracks the values of the various systems on a starfield ship.
     // IDEA: A Server and Client program for collaboration, and ship combat.
     // IDEA: A Main menu that takes you to eeach of the system pages
