@@ -1,20 +1,17 @@
 const std = @import("std");
-const Ship = struct {
-    hp: u32,
-    shields: u32,
+// const gpa = std.heap.GeneralPurposeAllocator(.{}){};
+const Ship = @import("Ship");
+const Star = @import("Star");
+const Galaxy = @import("Galaxy");
 
-    pub fn take_damage(self: Ship, damage: u32) u32 {
-        return self.hp - damage;
-    }
-
-    pub fn init(hp: u32, shields: u32) Ship {
-        return Ship{
-            .hp = hp,
-            .shields = shields,
-        };
-    }
-};
 pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const Allocator = gpa.allocator();
+    var StarList = std.ArrayList(Star).init(Allocator);
+    var Cascadia = Galaxy.init("Cascadia", 100, 100, StarList);
+    var Star1 = Star.init("1", 0, 0);
+    _ = Star1;
+    std.debug.print("Galaxy Name: {s}, List {}", .{ Cascadia.name, Cascadia.stars });
     const Capitol = Ship.init(100, 100);
 
     const hp = Capitol.hp;
