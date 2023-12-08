@@ -24,10 +24,10 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const Star = b.addModule("Star", .{
-        .source_file = .{ .path = "lib/Star.zig" },
+    const Space = b.addModule("Space", .{
+        .source_file = .{ .path = "lib/Space.zig" },
     });
-    exe.addModule("Star", Star);
+    exe.addModule("Space", Space);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default

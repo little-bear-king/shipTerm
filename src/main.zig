@@ -11,10 +11,12 @@
 // IDEA:
 // TODO: Learn about build.zig and linking libraries
 // TODO: Learn about creating custom types for the Ships, Planets, Stars, and the Galaxy
+
 const std = @import("std");
 const rand = @import("std").rand;
 const Allocator = std.mem.Allocator;
-const Star = @import("Star").Star;
+const Space = @import("Space");
+const Star = Space.Star;
 
 const numStars: u32 = 10001;
 

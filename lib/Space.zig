@@ -21,3 +21,20 @@ pub const Star = struct {
         try writer.print("star:\nname: \"{s}\"\tx: {d:1.1}, y: {d:1.1}\n", .{ self.name, self.x, self.y });
     }
 };
+
+pub const Galaxy = struct {
+    name: []const u8,
+    x_Max: i32,
+    y_Max: i32,
+
+    stars: std.ArrayList(Star),
+
+    pub fn init(name: []const u8, x_Max: i32, y_Max: i32, stars: std.ArrayList(Star)) !void {
+        return Galaxy{
+            .name = name,
+            .x_Max = x_Max,
+            .y_Max = y_Max,
+            .stars = stars,
+        };
+    }
+};
