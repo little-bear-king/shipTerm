@@ -35,12 +35,18 @@ pub fn main() !void {
         const stddev_y: f32 = 10.0;
         const x = random.random().floatNorm(f32) * stddev_x;
         const y = random.random().floatNorm(f32) * stddev_y;
-        const starInit = Star.init(starName, x, y);
+        const starInit = try Star.init(Alloc, starName, x, y);
         try my_hash_map.put(starInit.name, starInit);
     }
     for (1..numStars) |value| {
         const getKey = try std.fmt.allocPrint(Alloc, "Star{}", .{value});
         const getStar = my_hash_map.getPtr(getKey);
         std.debug.print("{any}\n", .{getStar});
+    }
+    for (1..numStars) |value| {
+        const getKey = try std.fmt.allocPrint(Alloc, "Star{}", .{value});
+        const getStar = my_hash_map.getPtr(getKey);
+        std.debug.print("Releasing: {s}\n", .{getStar.?.name});
+        try getStar.?.deinit();
     }
 }
