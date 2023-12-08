@@ -1,16 +1,23 @@
 const std = @import("std");
-// const Galaxy = @import("Galaxy.zig");
 
-const Star = @This();
+pub const Star = struct {
+    name: []u8,
+    x: f32,
+    y: f32,
 
-name: []const u8,
-x_pos: i32,
-y_pos: i32,
+    pub fn init(name: []u8, x: f32, y: f32) Star {
+        return Star{ .name = name, .x = x, .y = y };
+    }
 
-pub fn init(name: []const u8, x_pos: i32, y_pos: i32) Star {
-    return Star{
-        .name = name,
-        .x_pos = x_pos,
-        .y_pos = y_pos,
-    };
-}
+    pub fn format(
+        self: @This(),
+        comptime fmt: []const u8,
+        options: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = fmt;
+        _ = options;
+
+        try writer.print("star:\nname: \"{s}\"\tx: {d:1.1}, y: {d:1.1}\n", .{ self.name, self.x, self.y });
+    }
+};

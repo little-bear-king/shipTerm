@@ -24,14 +24,10 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const Ship = b.addModule("Ship", .{ .source_file = .{ .path = "lib/Ship.zig" } });
-    exe.addModule("Ship", Ship);
-
-    const Star = b.addModule("Star", .{ .source_file = .{ .path = "lib/Star.zig" } });
+    const Star = b.addModule("Star", .{
+        .source_file = .{ .path = "lib/Star.zig" },
+    });
     exe.addModule("Star", Star);
-
-    const Galaxy = b.addModule("Galaxy", .{ .source_file = .{ .path = "lib/Galaxy.zig" } });
-    exe.addModule("Galaxy", Galaxy);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
