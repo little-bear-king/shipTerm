@@ -25,28 +25,36 @@ pub fn main() !void {
     const Alloc = gpa.allocator();
 
     // Star Generation
-    var random = rand.DefaultPrng.init(0); // Initialize a random number generator.random
     var my_hash_map = std.StringHashMap(Star).init(Alloc);
     defer my_hash_map.deinit();
 
+    //Randomly Generate the Stars
+    try generateStars(&my_hash_map, Alloc);
+
+    const currentStar = my_hash_map.getPtr("Star1").?;
+    var Pruvalit = Space.VoidShip.init(currentStar);
+    std.debug.print("{}", .{Pruvalit});
+
+    const newStar = my_hash_map.getPtr("Star9999").?;
+    try Pruvalit.voidDrive(newStar);
+    std.debug.print("{}", .{Pruvalit});
+
+    for (1..numStars) |value| {
+        const getKey = try std.fmt.allocPrint(Alloc, "Star{}", .{value});
+        const getStar = my_hash_map.getPtr(getKey);
+        try getStar.?.deinit();
+    }
+}
+
+fn generateStars(self: *std.StringHashMap(Star), alloc: std.mem.Allocator) !void {
+    var random = rand.DefaultPrng.init(0);
     for (1..numStars) |i| {
-        const starName = try std.fmt.allocPrint(Alloc, "Star{}", .{i});
+        const starName = try std.fmt.allocPrint(alloc, "Star{}", .{i});
         const stddev_x: f32 = 10.0;
         const stddev_y: f32 = 10.0;
         const x = random.random().floatNorm(f32) * stddev_x;
         const y = random.random().floatNorm(f32) * stddev_y;
-        const starInit = try Star.init(Alloc, starName, x, y);
-        try my_hash_map.put(starInit.name, starInit);
-    }
-    for (1..numStars) |value| {
-        const getKey = try std.fmt.allocPrint(Alloc, "Star{}", .{value});
-        const getStar = my_hash_map.getPtr(getKey);
-        std.debug.print("{any}\n", .{getStar});
-    }
-    for (1..numStars) |value| {
-        const getKey = try std.fmt.allocPrint(Alloc, "Star{}", .{value});
-        const getStar = my_hash_map.getPtr(getKey);
-        std.debug.print("Releasing: {s}\n", .{getStar.?.name});
-        try getStar.?.deinit();
+        const starInit = try Star.init(alloc, starName, x, y);
+        try self.put(starInit.name, starInit);
     }
 }
