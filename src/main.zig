@@ -5,12 +5,6 @@
 // IDEA: A quick way to import new ship types, and info
 // IDEA: save data
 // IDEA: I want it to feel like a terminal deep in the bowels of an Artificers ship
-// IDEA:
-// IDEA:
-// IDEA: I could try to implement in C first and port it over?
-// IDEA:
-// TODO: Learn about build.zig and linking libraries
-// TODO: Learn about creating custom types for the Ships, Planets, Stars, and the Galaxy
 
 const std = @import("std");
 const rand = @import("std").rand;
@@ -21,24 +15,21 @@ const Star = Space.Star;
 const numStars: u32 = 10001;
 
 pub fn main() !void {
+    // Create Allocator
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const Alloc = gpa.allocator();
 
-    // Star Generation
+    // create hasmap for Star Generation
     var my_hash_map = std.StringHashMap(Star).init(Alloc);
     defer my_hash_map.deinit();
 
-    //Randomly Generate the Stars
+    //Generate the Stars
     try generateStars(&my_hash_map, Alloc);
 
-    const currentStar = my_hash_map.getPtr("Star1").?;
-    var Pruvalit = Space.VoidShip.init(currentStar);
-    std.debug.print("{}", .{Pruvalit});
+    // Start the Shell
+    try shiptermShell(Alloc);
 
-    const newStar = my_hash_map.getPtr("Star9999").?;
-    try Pruvalit.voidDrive(newStar);
-    std.debug.print("{}", .{Pruvalit});
-
+    // Cleanup Hashmap after the program
     for (1..numStars) |value| {
         const getKey = try std.fmt.allocPrint(Alloc, "Star{}", .{value});
         const getStar = my_hash_map.getPtr(getKey);
@@ -58,3 +49,42 @@ fn generateStars(self: *std.StringHashMap(Star), alloc: std.mem.Allocator) !void
         try self.put(starInit.name, starInit);
     }
 }
+
+
+fn shiptermShell(allocator: std.mem.Allocator) !void {
+    const reader = std.io.getStdIn().reader();
+    const writer = std.io.getStdOut().writer();
+
+    while (true) {
+        const mainOptions =  
+                            \\1. Jump Drive
+                            \\2. Scan Star
+                            \\3. Scan Planet
+                            \\4. Quit Nav System
+        ;
+
+        const promptMain = "shipTerm Main > ";
+        try writer.writeAll(mainOptions);
+        try writer.writeAll("\n\n");
+
+        try writer.writeAll(promptMain);
+        const input: []u8 = try reader.readUntilDelimiterAlloc(allocator, '\n', 512);
+        try writer.writeAll("\n\n");
+        defer allocator.free(input);
+
+        if (input.len == 0) {
+            try writer.writeAll("Please enter an Option\n\n\n");
+        } else {
+            const parsedIn = try std.fmt.parseInt(u8, input, 10);
+            switch (parsedIn) {
+                1 => try writer.writeAll("Option 1\n\n"),
+                2 => try writer.writeAll("Option 2\n\n"),
+                3 => try writer.writeAll("Option 3\n\n"),
+                4 => try writer.writeAll("Option 4\n\n"),
+                else => try writer.writeAll("Not an Option\n\n"),
+            }
+        }
+
+    }
+}
+
