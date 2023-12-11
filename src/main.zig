@@ -68,9 +68,11 @@ fn shiptermShell(allocator: std.mem.Allocator) !void {
         try writer.writeAll("\n\n");
 
         try writer.writeAll(promptMain);
-        const input: []u8 = try reader.readUntilDelimiterAlloc(allocator, '\n', 8);
+        const userInput: []u8 = try reader.readUntilDelimiterAlloc(allocator, '\n', 512);
         try writer.writeAll("\n\n");
-        defer allocator.free(input);
+        defer allocator.free(userInput);
+
+        const input = try trimWindowsReturn(userInput);
 
         if (input.len == 0) {
             try writer.writeAll("Please enter an Option\n\n\n");
@@ -84,5 +86,13 @@ fn shiptermShell(allocator: std.mem.Allocator) !void {
                 else => try writer.writeAll("Not an Option\n\n"),
             }
         }
+    }
+}
+
+fn trimWindowsReturn(buffer: []u8) ![]const u8 {
+    if (@import("builtin").os.tag == .windows) {
+        return std.mem.trimRight(u8, buffer, "\r");
+    } else {
+        return buffer;
     }
 }
