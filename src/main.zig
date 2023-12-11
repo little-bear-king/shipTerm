@@ -9,7 +9,8 @@
 const std = @import("std");
 const rand = @import("std").rand;
 const Allocator = std.mem.Allocator;
-const Space = @import("Space");
+const utils = @import("utils.zig");
+const Space = @import("Space.zig");
 const Star = Space.Star;
 
 const numStars: u32 = 10001;
@@ -50,17 +51,16 @@ fn generateStars(self: *std.StringHashMap(Star), alloc: std.mem.Allocator) !void
     }
 }
 
-
 fn shiptermShell(allocator: std.mem.Allocator) !void {
     const reader = std.io.getStdIn().reader();
     const writer = std.io.getStdOut().writer();
 
     while (true) {
-        const mainOptions =  
-                            \\1. Jump Drive
-                            \\2. Scan Star
-                            \\3. Scan Planet
-                            \\4. Quit Nav System
+        const mainOptions =
+            \\1. Jump Drive
+            \\2. Scan Star
+            \\3. Scan Planet
+            \\4. Quit Nav System
         ;
 
         const promptMain = "shipTerm Main > ";
@@ -68,7 +68,7 @@ fn shiptermShell(allocator: std.mem.Allocator) !void {
         try writer.writeAll("\n\n");
 
         try writer.writeAll(promptMain);
-        const input: []u8 = try reader.readUntilDelimiterAlloc(allocator, '\n', 512);
+        const input: []u8 = try reader.readUntilDelimiterAlloc(allocator, '\n', 8);
         try writer.writeAll("\n\n");
         defer allocator.free(input);
 
@@ -84,7 +84,5 @@ fn shiptermShell(allocator: std.mem.Allocator) !void {
                 else => try writer.writeAll("Not an Option\n\n"),
             }
         }
-
     }
 }
-
