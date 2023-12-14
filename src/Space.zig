@@ -1,5 +1,5 @@
 const std = @import("std");
-
+pub const numStars: u64 = 1000001;
 pub const Star = struct {
     allocator: std.mem.Allocator,
     name: []u8,
@@ -75,3 +75,15 @@ pub const Planet = struct {
     }
 };
 
+pub fn generateStars(self: *std.StringHashMap(Star), alloc: std.mem.Allocator) !void {
+    var random = std.rand.DefaultPrng.init(0);
+    for (1..numStars) |i| {
+        const starName = try std.fmt.allocPrint(alloc, "Star{}", .{i});
+        const stddev_x: f32 = 10.0;
+        const stddev_y: f32 = 10.0;
+        const x = random.random().floatNorm(f32) * stddev_x;
+        const y = random.random().floatNorm(f32) * stddev_y;
+        const starInit = try Star.init(alloc, starName, x, y);
+        try self.put(starInit.name, starInit);
+    }
+}

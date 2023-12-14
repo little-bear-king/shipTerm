@@ -13,8 +13,7 @@ const utils = @import("utils.zig");
 const Space = @import("Space.zig");
 const GalaxyGraph = @import("graph.zig").GalaxyGraph;
 const Star = Space.Star;
-
-const numStars: u32 = 10001;
+const numStars = Space.numStars;
 
 pub fn main() !void {
 
@@ -33,7 +32,7 @@ pub fn main() !void {
     // create the Galaxy to strore the Stars
     var Galaxy = GalaxyGraph.init(Alloc);
     //Generate the Stars
-    try generateStars(&Galaxy.nodes, Alloc);
+    try Space.generateStars(&Galaxy.nodes, Alloc);
 
     // Start the Shell
     try shiptermShell(Alloc, Galaxy);
@@ -46,18 +45,18 @@ pub fn main() !void {
     }
 }
 
-fn generateStars(self: *std.StringHashMap(Star), alloc: std.mem.Allocator) !void {
-    var random = rand.DefaultPrng.init(0);
-    for (1..numStars) |i| {
-        const starName = try std.fmt.allocPrint(alloc, "Star{}", .{i});
-        const stddev_x: f32 = 10.0;
-        const stddev_y: f32 = 10.0;
-        const x = random.random().floatNorm(f32) * stddev_x;
-        const y = random.random().floatNorm(f32) * stddev_y;
-        const starInit = try Star.init(alloc, starName, x, y);
-        try self.put(starInit.name, starInit);
-    }
-}
+// fn generateStars(self: *std.StringHashMap(Star), alloc: std.mem.Allocator) !void {
+//     var random = rand.DefaultPrng.init(0);
+//     for (1..numStars) |i| {
+//         const starName = try std.fmt.allocPrint(alloc, "Star{}", .{i});
+//         const stddev_x: f32 = 10.0;
+//         const stddev_y: f32 = 10.0;
+//         const x = random.random().floatNorm(f32) * stddev_x;
+//         const y = random.random().floatNorm(f32) * stddev_y;
+//         const starInit = try Star.init(alloc, starName, x, y);
+//         try self.put(starInit.name, starInit);
+//     }
+// }
 
 fn shiptermShell(allocator: std.mem.Allocator, Galaxy: GalaxyGraph) !void {
     const reader = std.io.getStdIn().reader();
@@ -83,7 +82,7 @@ fn shiptermShell(allocator: std.mem.Allocator, Galaxy: GalaxyGraph) !void {
         try writer.writeAll("\n\n");
         defer allocator.free(userInput);
 
-        const input = try trimWindowsReturn(userInput);
+        const input = try utils.trimWindowsReturn(userInput);
 
         if (input.len == 0) {
             try writer.writeAll("Please enter an Option\n\n\n");
@@ -93,20 +92,13 @@ fn shiptermShell(allocator: std.mem.Allocator, Galaxy: GalaxyGraph) !void {
                 1 => try writer.writeAll("Option 1\n\n"),
                 2 => try scanStar(allocator, writer, reader, Galaxy),
                 3 => try writer.writeAll("Option 3\n\n"),
-                4 => goodBye(),
+                4 => utils.goodBye(),
                 else => try writer.writeAll("Not an Option\n\n"),
             }
         }
     }
 }
 
-fn trimWindowsReturn(buffer: []u8) ![]const u8 {
-    if (@import("builtin").os.tag == .windows) {
-        return std.mem.trimRight(u8, buffer, "\r");
-    } else {
-        return buffer;
-    }
-}
 fn scanStar(alloc: std.mem.Allocator, writer: anytype, reader: anytype, galaxy: GalaxyGraph) !void {
     try writer.writeAll("What's the name of the star?: ");
 
@@ -114,7 +106,7 @@ fn scanStar(alloc: std.mem.Allocator, writer: anytype, reader: anytype, galaxy: 
     try writer.writeAll("\n");
     defer alloc.free(userInput);
     if (@TypeOf(userInput) == []u8) {
-        const processed = try trimWindowsReturn(userInput);
+        const processed = try utils.trimWindowsReturn(userInput);
         const hmm = galaxy.nodes.getEntry(processed);
         if (hmm == null) {
             std.debug.print("Star not found in our database. Remember Capitalization is Important\n ", .{});
@@ -123,12 +115,13 @@ fn scanStar(alloc: std.mem.Allocator, writer: anytype, reader: anytype, galaxy: 
         const answer = galaxy.nodes.getPtr(processed);
         try writer.print("{}\n", .{answer.?.*});
         try writer.print("ENTER TO CONTINUE\n", .{});
-        _ = try reader.readUntilDelimiterAlloc(alloc, '\n', 512);
+        if (@import("builtin").os.tag == .windows) {
+            _ = try reader.readUntilDelimiterAlloc(alloc, '\r', 8);
+            return;
+        } else {
+            _ = try reader.readUntilDelimiterAlloc(alloc, '\n', 8);
+            return;
+        }
     }
     return;
-}
-fn goodBye() void {
-    std.debug.print("Logging off...\n", .{});
-    std.debug.print("Goodbye!\n", .{});
-    std.process.exit(0);
 }
