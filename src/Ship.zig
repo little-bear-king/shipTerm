@@ -1,5 +1,7 @@
 const std = @import("std");
 const Star = @import("Space.zig").Star;
+const GalaxyGraph = @import("graph.zig").GalaxyGraph;
+const utils = @import("utils.zig");
 
 pub const EmperialJumpShip = struct {
     hp: u32 = 100,
@@ -96,3 +98,30 @@ pub const VoidShip = struct {
 
     pub fn deinit() !void {}
 };
+
+pub fn scanStar(alloc: std.mem.Allocator, writer: anytype, reader: anytype, galaxy: GalaxyGraph) !void {
+    try writer.writeAll("What's the name of the star?: ");
+
+    const userInput: []u8 = try reader.readUntilDelimiterAlloc(alloc, '\n', 512);
+    try writer.writeAll("\n");
+    defer alloc.free(userInput);
+    if (@TypeOf(userInput) == []u8) {
+        const processed = try utils.trimWindowsReturn(userInput);
+        const hmm = galaxy.nodes.getEntry(processed);
+        if (hmm == null) {
+            std.debug.print("Star not found in our database. Remember Capitalization is Important\n ", .{});
+            return;
+        }
+        const answer = galaxy.nodes.getPtr(processed);
+        try writer.print("{}\n", .{answer.?.*});
+        try writer.print("ENTER TO CONTINUE\n", .{});
+        if (@import("builtin").os.tag == .windows) {
+            _ = try reader.readUntilDelimiterAlloc(alloc, '\r', 8);
+            return;
+        } else {
+            _ = try reader.readUntilDelimiterAlloc(alloc, '\n', 8);
+            return;
+        }
+    }
+    return;
+}
