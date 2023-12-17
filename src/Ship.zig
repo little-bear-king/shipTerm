@@ -99,28 +99,46 @@ pub const VoidShip = struct {
     pub fn deinit() !void {}
 };
 
-pub fn scanStar(alloc: std.mem.Allocator, writer: anytype, reader: anytype, galaxy: GalaxyGraph) !void {
-    try writer.writeAll("What's the name of the star?: ");
+pub fn scanStar(galaxy: GalaxyGraph) !void {
+    const reader = std.io.getStdIn().reader();
+    const writer = std.io.getStdOut().writer();
 
-    const userInput: []u8 = try reader.readUntilDelimiterAlloc(alloc, '\n', 512);
-    try writer.writeAll("\n");
-    defer alloc.free(userInput);
-    if (@TypeOf(userInput) == []u8) {
-        const processed = try utils.trimWindowsReturn(userInput);
-        const hmm = galaxy.nodes.getEntry(processed);
-        if (hmm == null) {
-            std.debug.print("Star not found in our database. Remember Capitalization is Important\n ", .{});
-            return;
-        }
-        const answer = galaxy.nodes.getPtr(processed);
-        try writer.print("{}\n", .{answer.?.*});
-        try writer.print("ENTER TO CONTINUE\n", .{});
-        if (@import("builtin").os.tag == .windows) {
-            _ = try reader.readUntilDelimiterAlloc(alloc, '\r', 8);
-            return;
-        } else {
-            _ = try reader.readUntilDelimiterAlloc(alloc, '\n', 8);
-            return;
+    while (true) {
+        try writer.writeAll("What's the name of the star?: ");
+
+        var input_buffer: [100]u8 = undefined;
+        const userInput = (try reader.readUntilDelimiterOrEof(
+            input_buffer[0..],
+            '\n',
+        )) orelse {
+            //no input, probably CTRL-D. Pring new line and exit!
+            try writer.print("Please enter a valid value\n", .{});
+            continue;
+        };
+        try writer.writeAll("\n");
+        if (@TypeOf(userInput) == []u8) {
+            const processed = try utils.trimWindowsReturn(userInput);
+            if (std.mem.eql(u8, processed, "exit")) {
+                try writer.print("{s}", .{utils.ANSI_CODES.term_on});
+                break;
+            }
+            const hmm = galaxy.nodes.getEntry(processed);
+            if (hmm == null) {
+                std.debug.print("Star not found in our database.\nRemember Capitalization is Important\n\n\n", .{});
+                continue;
+            }
+            const answer = galaxy.nodes.getPtr(processed);
+            try writer.print("{}\n", .{answer.?.*});
+            try writer.print("ENTER TO CONTINUE\n", .{});
+            input_buffer = undefined;
+            var continue_buffer: [8]u8 = undefined;
+            if (@import("builtin").os.tag == .windows) {
+                _ = try reader.readUntilDelimiterOrEof(continue_buffer[0..], '\r');
+                break;
+            } else {
+                _ = try reader.readUntilDelimiterOrEof(continue_buffer[0..], '\n');
+                break;
+            }
         }
     }
     return;

@@ -36,14 +36,13 @@ pub fn main() !void {
     //Generate the Stars
     try Space.generateStars(&Galaxy.nodes, Alloc);
 
-    const reader = std.io.getStdIn().reader();
-    const writer = std.io.getStdOut().writer();
     // Start the Shell
-    try terminal.shiptermShell(Alloc, reader, writer, Galaxy);
+    try terminal.shiptermShell(Galaxy);
 
     // Cleanup Hashmap after the program
     for (1..numStars) |value| {
-        const getKey = try std.fmt.allocPrint(Alloc, "Star{}", .{value});
+        var buff: [15]u8 = undefined;
+        const getKey = try std.fmt.bufPrint(&buff, "Star{}", .{value});
         const getStar = Galaxy.nodes.getPtr(getKey);
         try getStar.?.deinit();
     }

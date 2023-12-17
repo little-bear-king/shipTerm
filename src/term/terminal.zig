@@ -3,8 +3,17 @@ const GalaxyGraph = @import("../graph.zig").GalaxyGraph;
 const utils = @import("../utils.zig");
 const Ship = @import("../Ship.zig");
 
-pub fn shiptermShell(allocator: std.mem.Allocator, reader: anytype, writer: anytype, Galaxy: GalaxyGraph) !void {
+const max_input = 512;
+
+pub fn shiptermShell(Galaxy: GalaxyGraph) !void {
+    const reader = std.io.getStdIn().reader();
+    const writer = std.io.getStdOut().writer();
+
+    var loopTracker: u64 = 1;
     while (true) {
+        if (loopTracker == 1) {
+            try writer.writeAll(utils.ANSI_CODES.term_on);
+        }
         const mainOptions =
             \\1. Jump Drive
             \\2. Scan Star
@@ -15,15 +24,23 @@ pub fn shiptermShell(allocator: std.mem.Allocator, reader: anytype, writer: anyt
             // target Planet
             // ship diagnostics
         ;
-        try writer.writeAll(ANSI_CODES.term_on);
         const promptMain = "shipTerm Main > ";
         try writer.writeAll(mainOptions);
         try writer.writeAll("\n\n");
 
+        var input_buffer: [max_input]u8 = undefined;
+
         try writer.writeAll(promptMain);
-        const userInput: []u8 = try reader.readUntilDelimiterAlloc(allocator, '\n', 512);
-        try writer.writeAll("\n\n");
-        defer allocator.free(userInput);
+        loopTracker += 1;
+        const userInput = (try reader.readUntilDelimiterOrEof(
+            &input_buffer,
+            '\n',
+        )) orelse {
+            //no input, probably CTRL-D. Pring new line and exit!
+            try writer.print("\n", .{});
+            continue;
+        };
+        try writer.print("\n\n", .{});
 
         const input = try utils.trimWindowsReturn(userInput);
 
@@ -33,7 +50,7 @@ pub fn shiptermShell(allocator: std.mem.Allocator, reader: anytype, writer: anyt
             const parsedIn = try std.fmt.parseInt(u8, input, 10);
             switch (parsedIn) {
                 1 => try writer.writeAll("Option 1\n\n"), // Ship.jumpDrive(*Star); Set current_Location to new star;
-                2 => try Ship.scanStar(allocator, writer, reader, Galaxy),
+                2 => try Ship.scanStar(Galaxy),
                 3 => try writer.writeAll("Option 3\n\n"),
                 4 => utils.goodBye(),
                 else => try writer.writeAll("Not an Option\n\n"),
@@ -45,30 +62,6 @@ pub fn shiptermShell(allocator: std.mem.Allocator, reader: anytype, writer: anyt
 pub fn goodBye() void {
     std.debug.print("Logging off...\n", .{});
     std.debug.print("Goodbye!\n", .{});
-    std.debug.print("{}", .{ANSI_CODES.term_off});
+    std.debug.print("{}", .{utils.ANSI_CODES.term_off});
     std.process.exit(0);
 }
-
-const ANSI_CODES = struct {
-    const esc = "\x1B";
-    const csi = esc ++ "[";
-
-    const cursor_show = csi ++ "?25h"; //h=high
-    const cursor_hide = csi ++ "?25l"; //l=low
-    const cursor_home = csi ++ "1;1H"; //1,1
-
-    const color_fg = "38;5;";
-    const color_bg = "48;5;";
-    const color_fg_def = csi ++ color_fg ++ "208m"; //
-    //const color_bg_def = csi ++ color_bg ++ "58m"; //
-    const color_def = color_fg_def;
-
-    const screen_clear = csi ++ "2J";
-    const screen_buf_on = csi ++ "?1049h"; //h=high
-    const screen_buf_off = csi ++ "?1049l"; //l=low
-
-    const nl = "\n";
-
-    const term_on = screen_buf_on ++ cursor_hide ++ cursor_home ++ screen_clear ++ color_def;
-    const term_off = screen_buf_off ++ cursor_show ++ nl;
-};
