@@ -1,11 +1,11 @@
 const std = @import("std");
-const GalaxyGraph = @import("../graph.zig").GalaxyGraph;
+const Galaxy = @import("../Space.zig").Galaxy;
 const utils = @import("../utils.zig");
 const Ship = @import("../Ship.zig");
 
 const max_input = 512;
 
-pub fn shiptermShell(Galaxy: GalaxyGraph) !void {
+pub fn shiptermShell(galaxy: Galaxy) !void {
     const reader = std.io.getStdIn().reader();
     const writer = std.io.getStdOut().writer();
 
@@ -17,7 +17,7 @@ pub fn shiptermShell(Galaxy: GalaxyGraph) !void {
         const mainOptions =
             \\1. Jump Drive
             \\2. Scan Star
-            \\3. Scan Planet
+            \\3. Export JSON
             \\4. Quit Nav System
             // manual shell mode
             // target star
@@ -50,8 +50,8 @@ pub fn shiptermShell(Galaxy: GalaxyGraph) !void {
             const parsedIn = try std.fmt.parseInt(u8, input, 10);
             switch (parsedIn) {
                 1 => try writer.writeAll("Option 1\n\n"), // Ship.jumpDrive(*Star); Set current_Location to new star;
-                2 => try Ship.scanStar(Galaxy),
-                3 => try writer.writeAll("Option 3\n\n"),
+                2 => try Ship.scanStar(galaxy),
+                3 => try utils.exportJSON(galaxy),
                 4 => utils.goodBye(),
                 else => try writer.writeAll("Not an Option\n\n"),
             }

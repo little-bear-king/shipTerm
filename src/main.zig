@@ -13,37 +13,24 @@ const utils = @import("utils.zig");
 const terminal = @import("term/terminal.zig");
 const Ship = @import("Ship.zig");
 const Space = @import("Space.zig");
-const GalaxyGraph = @import("graph.zig").GalaxyGraph;
+const Galaxy = Space.Galaxy;
 const Star = Space.Star;
 const numStars = Space.numStars;
 
 pub fn main() !void {
-
-    // Create the GalaxyGraph
-    // Create A Star
-    // Add Star to the Graph
-    // Have all Stars Created
     // Create the Edges
     // How do I make the edges based off of distance?
-    // Start the Shell
 
     // Create Allocator
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const Alloc = gpa.allocator();
 
     // create the Galaxy to strore the Stars
-    var Galaxy = GalaxyGraph.init(Alloc);
+    var Cascadia = Galaxy.init(Alloc);
     //Generate the Stars
-    try Space.generateStars(&Galaxy.nodes, Alloc);
+    try Space.generateStars(Alloc, &Cascadia.stars, Cascadia);
 
+    // Create the edges and add them to the star objects
     // Start the Shell
-    try terminal.shiptermShell(Galaxy);
-
-    // Cleanup Hashmap after the program
-    for (1..numStars) |value| {
-        var buff: [15]u8 = undefined;
-        const getKey = try std.fmt.bufPrint(&buff, "Star{}", .{value});
-        const getStar = Galaxy.nodes.getPtr(getKey);
-        try getStar.?.deinit();
-    }
+    try terminal.shiptermShell(Cascadia);
 }

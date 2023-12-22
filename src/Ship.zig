@@ -1,6 +1,7 @@
 const std = @import("std");
-const Star = @import("Space.zig").Star;
-const GalaxyGraph = @import("graph.zig").GalaxyGraph;
+const Space = @import("Space.zig");
+const Galaxy = Space.Galaxy;
+const Star = Space.Star;
 const utils = @import("utils.zig");
 
 pub const EmperialJumpShip = struct {
@@ -99,7 +100,7 @@ pub const VoidShip = struct {
     pub fn deinit() !void {}
 };
 
-pub fn scanStar(galaxy: GalaxyGraph) !void {
+pub fn scanStar(galaxy: Galaxy) !void {
     const reader = std.io.getStdIn().reader();
     const writer = std.io.getStdOut().writer();
 
@@ -122,12 +123,12 @@ pub fn scanStar(galaxy: GalaxyGraph) !void {
                 try writer.print("{s}", .{utils.ANSI_CODES.term_on});
                 break;
             }
-            const hmm = galaxy.nodes.getEntry(processed);
+            const hmm = galaxy.stars.getEntry(processed);
             if (hmm == null) {
                 std.debug.print("Star not found in our database.\nRemember Capitalization is Important\n\n\n", .{});
                 continue;
             }
-            const answer = galaxy.nodes.getPtr(processed);
+            const answer = galaxy.stars.getPtr(processed);
             try writer.print("{}\n", .{answer.?.*});
             try writer.print("ENTER TO CONTINUE\n", .{});
             input_buffer = undefined;

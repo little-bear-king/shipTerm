@@ -1,4 +1,6 @@
 const std = @import("std");
+const Space = @import("Space.zig");
+const Galaxy = @import("Space.zig").Galaxy;
 
 pub fn trimWindowsReturn(buffer: []u8) ![]const u8 {
     if (@import("builtin").os.tag == .windows) {
@@ -14,7 +16,29 @@ pub fn goodBye() void {
     std.process.exit(0);
 }
 
-pub fn print() !void {}
+pub fn exportJSON(galaxy: Galaxy) !void {
+    const options = std.json.StringifyOptions{};
+    if (@TypeOf(std.fs.cwd().openDir("json", .{})) == std.fs.Dir) {
+        try std.fs.cwd().deleteTree("json");
+    }
+    std.fs.cwd().makeDir("json") catch |err| std.debug.print("Folder Exists: {}", .{err});
+    var file = try std.fs.cwd().createFile("json/stars.json", .{});
+    defer file.close();
+
+    std.debug.print("EXPORTING STARS TO JSON", .{});
+    for (0..Space.numStars) |value| {
+        var buff: [15]u8 = undefined;
+        const starName = try std.fmt.bufPrint(&buff, "Star{}", .{value});
+        const star = galaxy.stars.getPtr(starName);
+        if (star != null) {
+            _ = try std.json.stringify(star, options, file.writer());
+        }
+        _ = try file.write("\n");
+        if (value % 100 == 0) {
+            std.debug.print("processed: {}/{}\n", .{ value, Space.numStars });
+        }
+    }
+}
 
 pub const ANSI_CODES = struct {
     const esc = "\x1B";
