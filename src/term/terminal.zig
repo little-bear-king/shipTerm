@@ -5,7 +5,7 @@ const Ship = @import("../Ship.zig");
 
 const max_input = 512;
 
-pub fn shiptermShell(galaxy: Galaxy) !void {
+pub fn shiptermShell(galaxy: Galaxy, allocator: std.mem.Allocator) !void {
     const reader = std.io.getStdIn().reader();
     const writer = std.io.getStdOut().writer();
 
@@ -51,7 +51,7 @@ pub fn shiptermShell(galaxy: Galaxy) !void {
             switch (parsedIn) {
                 1 => try writer.writeAll("Option 1\n\n"), // Ship.jumpDrive(*Star); Set current_Location to new star;
                 2 => try Ship.scanStar(galaxy),
-                3 => try utils.exportJSON(galaxy),
+                3 => try utils.exportJSON(galaxy, allocator),
                 4 => utils.goodBye(),
                 else => try writer.writeAll("Not an Option\n\n"),
             }

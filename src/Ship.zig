@@ -105,9 +105,9 @@ pub fn scanStar(galaxy: Galaxy) !void {
     const writer = std.io.getStdOut().writer();
 
     while (true) {
-        try writer.writeAll("What's the name of the star?: ");
+        try writer.writeAll("What's the StarId of the star?: ");
 
-        var input_buffer: [100]u8 = undefined;
+        var input_buffer: [15]u8 = undefined;
         const userInput = (try reader.readUntilDelimiterOrEof(
             input_buffer[0..],
             '\n',
@@ -118,11 +118,12 @@ pub fn scanStar(galaxy: Galaxy) !void {
         };
         try writer.writeAll("\n");
         if (@TypeOf(userInput) == []u8) {
-            const processed = try utils.trimWindowsReturn(userInput);
-            if (std.mem.eql(u8, processed, "exit")) {
+            const preprocess = try utils.trimWindowsReturn(userInput);
+            if (std.mem.eql(u8, preprocess, "exit")) {
                 try writer.print("{s}", .{utils.ANSI_CODES.term_on});
                 break;
             }
+            const processed = try std.fmt.parseInt(u64, preprocess, 10);
             const hmm = galaxy.stars.getEntry(processed);
             if (hmm == null) {
                 std.debug.print("Star not found in our database.\nRemember Capitalization is Important\n\n\n", .{});

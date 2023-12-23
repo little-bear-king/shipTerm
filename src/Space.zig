@@ -1,13 +1,14 @@
 const std = @import("std");
 pub const numStars: u64 = 1000001;
 pub const GraphError = error{ NodeExists, EdgeExists, starsDoNotExist, EdgesDoNotExist };
+pub const StarId = u64;
 
 pub const Galaxy = struct {
     allocator: std.mem.Allocator,
-    stars: std.StringHashMap(Star),
+    stars: std.AutoHashMap(StarId, Star),
 
     pub fn init(Allocator: std.mem.Allocator) Galaxy {
-        const stars = std.StringHashMap(Star).init(Allocator);
+        const stars = std.AutoHashMap(StarId, Star).init(Allocator);
         return .{
             .allocator = Allocator,
             .stars = stars,
@@ -24,22 +25,83 @@ pub const Galaxy = struct {
         }
         self.* = undefined;
     }
+
+    pub fn generateStars(galaxy: *Galaxy, alloc: std.mem.Allocator) !void {
+        var random = std.rand.DefaultPrng.init(0);
+        var prev_Star: Star = undefined;
+        for (1..numStars) |i| {
+            if (i == 1) {
+                const starName = try std.fmt.allocPrint(alloc, "Star{}", .{i});
+                const stddev_x: f32 = 1.0;
+                const stddev_y: f32 = 1.0;
+                const x = random.random().floatNorm(f32) * stddev_x;
+                const y = random.random().floatNorm(f32) * stddev_y;
+                const starInit = try Star.init(i, starName, x, y, galaxy);
+                try galaxy.stars.put(starInit.id, starInit);
+                prev_Star = starInit;
+                continue;
+            } else {
+                const starName = try std.fmt.allocPrint(alloc, "Star{}", .{i});
+                const stddev_x: f32 = 1.0;
+                const stddev_y: f32 = 1.0;
+                const prevStarMeanX = prev_Star.x;
+                const prevStarMeanY = prev_Star.y;
+                const x = random.random().floatNorm(f32) * stddev_x + prevStarMeanX;
+                const y = random.random().floatNorm(f32) * stddev_y + prevStarMeanY;
+                const starInit = try Star.init(i, starName, x, y, galaxy);
+                const jump = Star.Jump{
+                    .distance = random.random().uintLessThan(usize, 10),
+                };
+                try galaxy.stars.put(starInit.id, starInit);
+                _ = try galaxy.addJump(starInit.id, prev_Star.id, jump);
+                prev_Star = starInit;
+            }
+        }
+    }
+
+    pub fn addJump(
+        galaxy: *Galaxy,
+        from: StarId,
+        to: StarId,
+        jump: Star.Jump,
+    ) !bool {
+        if (galaxy.stars.getEntry(from)) |from_star| {
+            if (galaxy.stars.getEntry(to)) |to_star| {
+                try from_star.value_ptr.*.jumps.append(galaxy.allocator, .{
+                    .to = to,
+                    .extra = jump,
+                });
+                try to_star.value_ptr.*.jumps.append(galaxy.allocator, .{
+                    .to = from,
+                    .extra = jump,
+                });
+                return true;
+            }
+        }
+
+        return false;
+    }
 };
 
 pub const Star = struct {
     // allocator: std.mem.Allocator,
-    id: u64,
+    id: StarId,
     name: []u8,
     x: f32,
     y: f32,
-    jumps: std.ArrayListUnmanaged([]u8) = .{},
+    jumps: std.ArrayListUnmanaged(struct {
+        to: StarId,
+        extra: Jump,
+    }) = .{},
+    galaxy: *Galaxy,
 
-    pub fn init(id: u64, name: []u8, x: f32, y: f32) !Star {
+    pub fn init(id: StarId, name: []u8, x: f32, y: f32, galaxy: *Galaxy) !Star {
         return .{ //.allocator = allocator,
             .id = id,
             .name = name,
             .x = x,
             .y = y,
+            .galaxy = galaxy,
         };
     }
 
@@ -52,7 +114,14 @@ pub const Star = struct {
         _ = fmt;
         _ = options;
 
-        try writer.print("star:\nname: \"{s}\"\tx: {d:1.1}, y: {d:1.1}\n", .{ self.name, self.x, self.y });
+        try writer.print("star:\nid: {}\nname: \"{s}\"\tx: {d:1.1}, y: {d:1.1}\n", .{ self.id, self.name, self.x, self.y });
+        try writer.print("\tjumps:\n", .{});
+        for (self.jumps.items) |item| {
+            const star = self.galaxy.stars.getEntry(item.to);
+            const name = star.?.value_ptr.*.name;
+            try writer.print("\t\tto: {s}\n", .{name});
+            try writer.print("\t\tdistance: {}\n\n", .{item.extra.distance});
+        }
     }
 
     pub fn deinit(self: *Star) !void {
@@ -63,47 +132,3 @@ pub const Star = struct {
         distance: usize,
     };
 };
-
-pub fn generateStars(alloc: std.mem.Allocator, self: *std.StringHashMap(Star), galaxy: Galaxy) !void {
-    const Cascadia = galaxy;
-    var random = std.rand.DefaultPrng.init(0);
-    var prev_Star: Star = undefined;
-    for (1..numStars) |i| {
-        if (i == 1) {
-            const starName = try std.fmt.allocPrint(alloc, "Star{}", .{i});
-            const stddev_x: f32 = 1.0;
-            const stddev_y: f32 = 1.0;
-            const x = random.random().floatNorm(f32) * stddev_x;
-            const y = random.random().floatNorm(f32) * stddev_y;
-            const starInit = try Star.init(i, starName, x, y);
-            try self.put(starInit.name, starInit);
-            prev_Star = starInit;
-            continue;
-        } else {
-            const starName = try std.fmt.allocPrint(alloc, "Star{}", .{i});
-            const stddev_x: f32 = 10.0;
-            const stddev_y: f32 = 10.0;
-            const prevStarMeanX = prev_Star.x;
-            const prevStarMeanY = prev_Star.y;
-            const x = random.random().floatNorm(f32) * stddev_x + prevStarMeanX;
-            const y = random.random().floatNorm(f32) * stddev_y + prevStarMeanY;
-            var starInit = try Star.init(i, starName, x, y);
-            // const jump = Star.Jump{
-            //     .distance = random.random().uintLessThan(usize, 10),
-            // };
-            _ = try addJump(alloc, &prev_Star, &starInit, Cascadia);
-            try self.put(starInit.name, starInit);
-            prev_Star = starInit;
-            continue;
-        }
-    }
-}
-
-pub fn addJump(allocator: std.mem.Allocator, from: *Star, to: *Star, galaxy: Galaxy) !void {
-    if (galaxy.stars.getEntry(from.name)) |from_star| {
-        try from_star.value_ptr.*.jumps.append(allocator, to.name);
-        try to.jumps.append(allocator, from.name);
-    } else {
-        std.debug.print("no Entry Found", .{});
-    }
-}

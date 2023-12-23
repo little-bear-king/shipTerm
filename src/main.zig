@@ -28,9 +28,9 @@ pub fn main() !void {
     // create the Galaxy to strore the Stars
     var Cascadia = Galaxy.init(Alloc);
     //Generate the Stars
-    try Space.generateStars(Alloc, &Cascadia.stars, Cascadia);
+    try Cascadia.generateStars(Alloc);
 
     // Create the edges and add them to the star objects
     // Start the Shell
-    try terminal.shiptermShell(Cascadia);
+    try terminal.shiptermShell(Cascadia, Alloc);
 }
