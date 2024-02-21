@@ -4,6 +4,8 @@ const Galaxy = Space.Galaxy;
 const Star = Space.Star;
 const utils = @import("utils.zig");
 
+pub var currentStar: Space.StarId = 1;
+
 pub const EmperialJumpShip = struct {
     hp: u32 = 100,
     shields: u32 = 100,
@@ -99,6 +101,11 @@ pub const VoidShip = struct {
 
     pub fn deinit() !void {}
 };
+
+pub fn setStar(firstStar: Space.StarId, userStar: []u8) void {
+    const answer = std.fmt.parseInt([]u8, userStar, 10);
+    firstStar = answer;
+}
 
 pub fn scanStar(galaxy: Galaxy) !void {
     const reader = std.io.getStdIn().reader();

@@ -13,6 +13,21 @@ pub fn shiptermShell(galaxy: Galaxy, allocator: std.mem.Allocator) !void {
     while (true) {
         if (loopTracker == 1) {
             try writer.writeAll(utils.ANSI_CODES.term_on);
+            var input_buffer: [max_input]u8 = undefined;
+
+            const setStar = "Please enter the current star: ";
+            try writer.writeAll(setStar);
+            const userSetStar = (try reader.readUntilDelimiterOrEof(
+                &input_buffer,
+                '\n',
+            )) orelse {
+                //no input, probably CTRL-D. Pring new line and exit!
+                try writer.print("\n", .{});
+                continue;
+            };
+
+            Ship.setStar(Ship.currentStar, userSetStar);
+            std.debug.print("{}\n", .{Ship.currentStar});
         }
         const mainOptions =
             \\1. Jump Drive
@@ -24,11 +39,12 @@ pub fn shiptermShell(galaxy: Galaxy, allocator: std.mem.Allocator) !void {
             // target Planet
             // ship diagnostics
         ;
+
+        var input_buffer: [max_input]u8 = undefined;
         const promptMain = "shipTerm Main > ";
         try writer.writeAll(mainOptions);
         try writer.writeAll("\n\n");
 
-        var input_buffer: [max_input]u8 = undefined;
 
         try writer.writeAll(promptMain);
         loopTracker += 1;

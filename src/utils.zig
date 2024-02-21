@@ -17,46 +17,48 @@ pub fn goodBye() void {
 }
 
 pub fn exportJSON(galaxy: Galaxy, alloc: std.mem.Allocator) !void {
-    const options = std.json.StringifyOptions{};
-
-    try std.fs.cwd().deleteTree("json");
-
-    std.fs.cwd().makeDir("json") catch |err| std.debug.print("Folder Exists: {}", .{err});
-    var file = try std.fs.cwd().createFile("json/stars.json", .{});
-    defer file.close();
-
-    std.debug.print("EXPORTING STARS TO JSON\n", .{});
-    for (1..Space.numStars) |value| {
-        const star = galaxy.stars.getPtr(value);
-        const jsonExportStruct = struct {
-            id: u64,
-            name: []u8,
-            x: f32,
-            y: f32,
-            jumps: std.ArrayListUnmanaged(struct {
-                to: Space.StarId,
-                extra: Space.Star.Jump,
-            }) = .{},
-        };
-        if (star == null) {
-            std.debug.print("NULL FOUND IN VALUE {}\n", .{value});
-            continue;
-        } else {
-            var exportStruct = jsonExportStruct{ .id = star.?.*.id, .name = star.?.*.name, .x = star.?.*.x, .y = star.?.*.y };
-            var object = star.?.*.jumps.popOrNull();
-            while (object != null) {
-                object = star.?.*.jumps.popOrNull();
-                if (object != null) {
-                    exportStruct.jumps.append(alloc, object.?);
-                }
-            }
-            _ = try std.json.stringify(exportStruct, options, file.writer());
-        }
-        _ = try file.write("\n");
-        if (value % 100 == 0) {
-            std.debug.print("processed: {}/{}\n", .{ value, Space.numStars });
-        }
-    }
+    _ = galaxy;
+    _ = alloc;
+    // const options = std.json.StringifyOptions{};
+    //
+    // try std.fs.cwd().deleteTree("json");
+    //
+    // std.fs.cwd().makeDir("json") catch |err| std.debug.print("Folder Exists: {}", .{err});
+    // var file = try std.fs.cwd().createFile("json/stars.json", .{});
+    // defer file.close();
+    //
+    // std.debug.print("EXPORTING STARS TO JSON\n", .{});
+    // for (1..Space.numStars) |value| {
+    //     const star = galaxy.stars.getPtr(value);
+    //     const jsonExportStruct = struct {
+    //         id: u64,
+    //         name: []u8,
+    //         x: f32,
+    //         y: f32,
+    //         jumps: std.ArrayListUnmanaged(struct {
+    //             to: Space.StarId,
+    //             extra: Space.Star.Jump,
+    //         }) = .{},
+    //     };
+    //     if (star == null) {
+    //         std.debug.print("NULL FOUND IN VALUE {}\n", .{value});
+    //         continue;
+    //     } else {
+    //         var exportStruct = jsonExportStruct{ .id = star.?.*.id, .name = star.?.*.name, .x = star.?.*.x, .y = star.?.*.y };
+    //         var object = star.?.*.jumps.popOrNull();
+    //         while (object != null) {
+    //             object = star.?.*.jumps.popOrNull();
+    //             if (object != null) {
+    //                 exportStruct.jumps.append(alloc, object.?);
+    //             }
+    //         }
+    //         _ = try std.json.stringify(exportStruct, options, file.writer());
+    //     }
+    //     _ = try file.write("\n");
+    //     if (value % 100 == 0) {
+    //         std.debug.print("processed: {}/{}\n", .{ value, Space.numStars });
+    //     }
+    // }
 }
 
 pub const ANSI_CODES = struct {
