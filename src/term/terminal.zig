@@ -26,7 +26,7 @@ pub fn shiptermShell(galaxy: Galaxy, allocator: std.mem.Allocator) !void {
                 continue;
             };
 
-            Ship.setStar(Ship.currentStar, userSetStar);
+            Ship.setStar(Ship, userSetStar);
             std.debug.print("{}\n", .{Ship.currentStar});
         }
         const mainOptions =
@@ -44,7 +44,6 @@ pub fn shiptermShell(galaxy: Galaxy, allocator: std.mem.Allocator) !void {
         const promptMain = "shipTerm Main > ";
         try writer.writeAll(mainOptions);
         try writer.writeAll("\n\n");
-
 
         try writer.writeAll(promptMain);
         loopTracker += 1;

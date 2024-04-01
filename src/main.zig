@@ -33,4 +33,9 @@ pub fn main() !void {
     // Create the edges and add them to the star objects
     // Start the Shell
     try terminal.shiptermShell(Cascadia, Alloc);
+    var iter = Cascadia.stars.iterator();
+
+    while (iter.next()) |x| {
+        std.debug.print("{}", .{x});
+    }
 }

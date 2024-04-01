@@ -102,9 +102,9 @@ pub const VoidShip = struct {
     pub fn deinit() !void {}
 };
 
-pub fn setStar(firstStar: Space.StarId, userStar: []u8) void {
+pub fn setStar(self: @This(), userStar: []u8) void {
     const answer = std.fmt.parseInt([]u8, userStar, 10);
-    firstStar = answer;
+    self.currentStar = answer;
 }
 
 pub fn scanStar(galaxy: Galaxy) !void {
