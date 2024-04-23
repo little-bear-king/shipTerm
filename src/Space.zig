@@ -38,6 +38,7 @@ pub const Galaxy = struct {
                 const y = random.random().floatNorm(f32) * stddev_y;
                 const starInit = try Star.init(i, starName, x, y, galaxy);
                 try galaxy.stars.put(starInit.id, starInit);
+                starInit.jumps.initCapacity(alloc, 5);
                 prev_Star = starInit;
                 continue;
             } else {
@@ -49,6 +50,7 @@ pub const Galaxy = struct {
                 const x = random.random().floatNorm(f32) * stddev_x + prevStarMeanX;
                 const y = random.random().floatNorm(f32) * stddev_y + prevStarMeanY;
                 const starInit = try Star.init(i, starName, x, y, galaxy);
+                starInit.jumps.initCapacity(alloc, 5);
                 const jump = Star.Jump{
                     .distance = random.random().uintLessThan(usize, 10),
                 };
